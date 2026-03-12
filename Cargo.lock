@@ -22,17 +22,20 @@ dependencies = [
 
 [[package]]
 name = "ark-lib"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "719aea941419990eb1f4d514a9595c75b580526ec0a1ffe5d672dec01ad1e9b2"
+checksum = "e8dba5c30a0ae3ffcf447cb9d1b5b5d65d1feb56604670372e3ffc52ba9d163b"
 dependencies = [
+ "async-trait",
  "bark-bitcoin-ext",
  "bitcoin",
  "chrono",
+ "getrandom 0.3.4",
  "hex-conservative 0.3.0",
  "lazy_static",
  "lightning",
- "lightning-invoice",
+ "lightning-invoice 0.34.0",
+ "rand 0.9.2",
  "secp256k1 0.32.0-beta.2",
  "serde",
  "thiserror",
@@ -43,6 +46,17 @@ name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
+name = "async-trait"
+version = "0.1.89"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9035ad2d096bed7955a320ee7e2230574d28fd3c3a0f186cbea1ff3c7eed5dbb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "atty"
@@ -63,9 +77,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "bark-bitcoin-ext"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "126914d9294363be665100586e8645c14c9b5ea65f3b59c39766531b1240b845"
+checksum = "0b126e12d6e0a9fe2047b1e288949d0647c4db254b3b66f0a2afb9f38f8bb7b9"
 dependencies = [
  "bitcoin",
  "lazy_static",
@@ -311,7 +325,7 @@ dependencies = [
  "hex",
  "jobserver",
  "lazy_static",
- "lightning-invoice",
+ "lightning-invoice 0.33.2",
  "log",
  "miniscript",
  "secp256k1 0.29.1",
@@ -414,9 +428,9 @@ dependencies = [
 
 [[package]]
 name = "lazy_static"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
@@ -432,17 +446,18 @@ checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
 
 [[package]]
 name = "lightning"
-version = "0.1.7"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc19846267fc5406a43bed1ca00621a74752b26998ee4eae9f532386b9bee59e"
+checksum = "4342d07db2b3fe7c9a73849e94d012ebcfa3588c25097daf0b5ff2857c04e0e1"
 dependencies = [
  "bech32",
  "bitcoin",
  "dnssec-prover",
  "hashbrown",
  "libm",
- "lightning-invoice",
- "lightning-types",
+ "lightning-invoice 0.34.0",
+ "lightning-macros",
+ "lightning-types 0.3.0",
  "possiblyrandom",
 ]
 
@@ -454,8 +469,30 @@ checksum = "11209f386879b97198b2bfc9e9c1e5d42870825c6bd4376f17f95357244d6600"
 dependencies = [
  "bech32",
  "bitcoin",
- "lightning-types",
+ "lightning-types 0.2.0",
+]
+
+[[package]]
+name = "lightning-invoice"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b85e5e14bcdb30d746e9785b04f27938292e8944f78f26517e01e91691f6b3f2"
+dependencies = [
+ "bech32",
+ "bitcoin",
+ "lightning-types 0.3.0",
  "serde",
+]
+
+[[package]]
+name = "lightning-macros"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80bd6063f4d0c34320f1db9193138c878e64142e6d1c42bd5f0124936e8764ec"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -463,6 +500,15 @@ name = "lightning-types"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2cd84d4e71472035903e43caded8ecc123066ce466329ccd5ae537a8d5488c7"
+dependencies = [
+ "bitcoin",
+]
+
+[[package]]
+name = "lightning-types"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5681708d3075bdff3a1b4daa400590e2703e7871bdc14e94ee7334fb6314ae40"
 dependencies = [
  "bitcoin",
 ]

@@ -69,7 +69,6 @@ pub enum BarkVtxoDeliveryInfo {
 impl GetInfo<BarkVtxoDeliveryInfo> for VtxoDelivery {
 	fn get_info(&self, _network: Network) -> BarkVtxoDeliveryInfo {
 		match self {
-			VtxoDelivery::ServerBuiltin => BarkVtxoDeliveryInfo::ServerBuiltin,
 			VtxoDelivery::ServerMailbox { blinded_id } => BarkVtxoDeliveryInfo::ServerMailbox {
 				blinded_mailbox_id: *blinded_id,
 			},
@@ -77,6 +76,7 @@ impl GetInfo<BarkVtxoDeliveryInfo> for VtxoDelivery {
 				delivery_type_byte: *delivery_type,
 				data: data.clone().into(),
 			},
+			// this means upstream lib added a type and we forgot to update
 			_ => BarkVtxoDeliveryInfo::Unknown {
 				delivery_type_byte: u8::MAX,
 				data: HexBytes(vec![]),
