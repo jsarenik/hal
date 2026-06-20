@@ -45,25 +45,10 @@ jobs:
           cp hal hal-aarch64-unknown-linux-musl
 
       - name: Create Release and Upload Binary
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: target/aarch64-unknown-linux-musl/release/hal-aarch64-unknown-linux-musl
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Prepare binary for upload
-        run: |
-          cd target/aarch64-unknown-linux-musl/release/
-          cp hal hal-aarch64-unknown-linux-musl
-
-      - name: Create Release and Upload Binary
-        uses: softprops/action-gh-release@v2
-        with:
-          files: target/aarch64-unknown-linux-musl/release/hal-aarch64-unknown-linux-musl
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
