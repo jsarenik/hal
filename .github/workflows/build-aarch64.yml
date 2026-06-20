@@ -1,13 +1,17 @@
-name: Build AArch64 Binary
+name: Build and Release AArch64 Binary
 
 on:
   push:
-    branches: [ "master" ]
-  workflow_dispatch: # Allows you to manually trigger the build from the UI
+    # Trigger only when pushing version tags like v1.0.0
+    tags:
+      - "v*"
+  workflow_dispatch: # Still allows you to trigger manually for testing
+
+permissions:
+  contents: write # Required to create a release and upload assets
 
 jobs:
-  build-arm64:
-    # Uses GitHub's native, free ARM64 Linux runner
+  build-and-release:
     runs-on: ubuntu-24.04-arm
     
     steps:
@@ -17,19 +21,26 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.74.0 # Matching the repo's specific MSRV
+          toolchain: 1.74.0
           targets: aarch64-unknown-linux-gnu
 
       - name: Cache Cargo dependencies
         uses: swatinem/rust-cache@v2
 
       - name: Build binary
-        # The repo documentation specifies using --locked to respect Cargo.lock
         run: cargo build --release --target aarch64-unknown-linux-gnu --locked
 
-      - name: Upload Binary Artifact
-        uses: actions/upload-artifact@v4
+      - name: Prepare binary for upload
+        # Rename the binary so it clearly indicates it is for aarch64
+        run: |
+          cd target/aarch64-unknown-linux-gnu/release/
+          mv hal hal-aarch64-unknown-linux-gnu
+
+      - name: Create Release and Upload Binary
+        uses: softprops/action-gh-release@v2
         with:
-          name: hal-aarch64-linux
-          path: target/aarch64-unknown-linux-gnu/release/hal
-          if-no-files-found: error
+          files: target/aarch64-unknown-linux-gnu/release/hal-aarch64-unknown-linux-gnu
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
