@@ -1,14 +1,13 @@
-name: Build and Release AArch64 Binary
+name: Build and Release Static AArch64 Binary
 
 on:
   push:
-    # Trigger only when pushing version tags like v1.0.0
     tags:
       - "v*"
-  workflow_dispatch: # Still allows you to trigger manually for testing
+  workflow_dispatch:
 
 permissions:
-  contents: write # Required to create a release and upload assets
+  contents: write
 
 jobs:
   build-and-release:
@@ -18,29 +17,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install musl-tools
+        # Required for static compilation on the ARM64 host
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.74.0
-          targets: aarch64-unknown-linux-gnu
+          targets: aarch64-unknown-linux-musl
 
       - name: Cache Cargo dependencies
         uses: swatinem/rust-cache@v2
 
-      - name: Build binary
-        run: cargo build --release --target aarch64-unknown-linux-gnu --locked
+      - name: Build static binary
+        run: cargo build --release --target aarch64-unknown-linux-musl --locked
 
       - name: Prepare binary for upload
-        # Rename the binary so it clearly indicates it is for aarch64
         run: |
-          cd target/aarch64-unknown-linux-gnu/release/
-          mv hal hal-aarch64-unknown-linux-gnu
+          cd target/aarch64-unknown-linux-musl/release/
+          mv hal hal-aarch64-unknown-linux-musl
 
       - name: Create Release and Upload Binary
         uses: softprops/action-gh-release@v2
         with:
-          files: target/aarch64-unknown-linux-gnu/release/hal-aarch64-unknown-linux-gnu
+          files: target/aarch64-unknown-linux-musl/release/hal-aarch64-unknown-linux-musl
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
