@@ -1,4 +1,4 @@
-name: Build and Release Static AArch64 Binary
+name: Build and Release Static Multi-Arch Binaries
 
 on:
   push:
@@ -11,43 +11,101 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-24.04-arm
-    
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-24.04-arm
+            binary_name: hal
+            output_name: hal-aarch64-unknown-linux-musl
+          - target: armv7-unknown-linux-musleabihf
+            os: ubuntu-24.04
+            binary_name: hal
+            output_name: hal-armv7-unknown-linux-musleabihf
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-24.04
+            binary_name: hal
+            output_name: hal-x86_64-unknown-linux-musl
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            binary_name: hal.exe
+            output_name: hal-x86_64-pc-windows-msvc.exe
+          - target: aarch64-apple-darwin
+            os: macos-14
+            binary_name: hal
+            output_name: hal-aarch64-apple-darwin
+          - target: x86_64-apple-darwin
+            os: macos-14
+            binary_name: hal
+            output_name: hal-x86_64-apple-darwin
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Install musl-tools
+      - name: Install musl-tools (Linux Only)
+        if: contains(matrix.target, 'linux-musl')
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools musl-dev
+
+      - name: Install 32-bit ARM Cross-Compiler (32-bit ARM Only)
+        if: matrix.target == 'armv7-unknown-linux-musleabihf'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.74.0
-          targets: aarch64-unknown-linux-musl
+          targets: ${{ matrix.target }}
 
       - name: Cache Cargo dependencies
         uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       - name: Patch broken jobserver dependency
-        # Forces the broken v0.1.11 crate to update to a compatible version for musl
         run: cargo update -p jobserver
 
       - name: Build static binary
-        # We drop --locked here so cargo can use our updated jobserver patch
-        run: cargo build --release --target aarch64-unknown-linux-musl
+        env:
+          CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER: arm-linux-gnueabihf-gcc
+        run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Prepare binary for upload
+      - name: Prepare binary for upload (Linux/macOS Single)
+        if: matrix.os != 'windows-latest'
         run: |
-          cd target/aarch64-unknown-linux-musl/release/
-          cp hal hal-aarch64-unknown-linux-musl
+          cd target/${{ matrix.target }}/release/
+          cp ${{ matrix.binary_name }} ${{ matrix.output_name }}
 
-      - name: Create Release and Upload Binary
+      - name: Create macOS Universal Binary
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: |
+          rustup target add x86_64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          lipo -create \
+            target/aarch64-apple-darwin/release/hal \
+            target/x86_64-apple-darwin/release/hal \
+            -output target/aarch64-apple-darwin/release/hal-macos-universal
+
+      - name: Prepare binary for upload (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd target\${{ matrix.target }}\release\
+          Copy-Item ${{ matrix.binary_name }} ${{ matrix.output_name }}
+
+      - name: Create or Update Release and Upload Binary
         uses: softprops/action-gh-release@v3
         with:
-          files: target/aarch64-unknown-linux-musl/release/hal-aarch64-unknown-linux-musl
+          files: |
+            target/${{ matrix.target }}/release/${{ matrix.output_name }}
+            target/aarch64-apple-darwin/release/hal-macos-universal
           draft: false
           prerelease: false
         env:
