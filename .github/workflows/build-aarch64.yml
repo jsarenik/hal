@@ -42,7 +42,7 @@ jobs:
       - name: Prepare binary for upload
         run: |
           cd target/aarch64-unknown-linux-musl/release/
-          mv hal hal-aarch64-unknown-linux-musl
+          cp hal hal-aarch64-unknown-linux-musl
 
       - name: Create Release and Upload Binary
         uses: softprops/action-gh-release@v2
@@ -56,7 +56,7 @@ jobs:
       - name: Prepare binary for upload
         run: |
           cd target/aarch64-unknown-linux-musl/release/
-          mv hal hal-aarch64-unknown-linux-musl
+          cp hal hal-aarch64-unknown-linux-musl
 
       - name: Create Release and Upload Binary
         uses: softprops/action-gh-release@v2
