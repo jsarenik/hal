@@ -21,26 +21,10 @@ jobs:
             os: ubuntu-24.04-arm
             binary_name: hal
             output_name: hal-aarch64-unknown-linux-musl
-          - target: armv7-unknown-linux-musleabihf
-            os: ubuntu-24.04
-            binary_name: hal
-            output_name: hal-armv7-unknown-linux-musleabihf
           - target: x86_64-unknown-linux-musl
             os: ubuntu-24.04
             binary_name: hal
             output_name: hal-x86_64-unknown-linux-musl
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            binary_name: hal.exe
-            output_name: hal-x86_64-pc-windows-msvc.exe
-          - target: aarch64-apple-darwin
-            os: macos-14
-            binary_name: hal
-            output_name: hal-aarch64-apple-darwin
-          - target: x86_64-apple-darwin
-            os: macos-14
-            binary_name: hal
-            output_name: hal-x86_64-apple-darwin
 
     steps:
       - name: Checkout repository
@@ -51,12 +35,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools musl-dev
-
-      - name: Install 32-bit ARM Cross-Compiler (32-bit ARM Only)
-        if: matrix.target == 'armv7-unknown-linux-musleabihf'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-linux-gnueabihf
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -73,39 +51,19 @@ jobs:
         run: cargo update -p jobserver
 
       - name: Build static binary
-        env:
-          CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER: arm-linux-gnueabihf-gcc
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Prepare binary for upload (Linux/macOS Single)
+      - name: Prepare binary for upload
         if: matrix.os != 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release/
           cp ${{ matrix.binary_name }} ${{ matrix.output_name }}
-
-      - name: Create macOS Universal Binary
-        if: matrix.target == 'aarch64-apple-darwin'
-        run: |
-          rustup target add x86_64-apple-darwin
-          cargo build --release --target x86_64-apple-darwin
-          lipo -create \
-            target/aarch64-apple-darwin/release/hal \
-            target/x86_64-apple-darwin/release/hal \
-            -output target/aarch64-apple-darwin/release/hal-macos-universal
-
-      - name: Prepare binary for upload (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          cd target\${{ matrix.target }}\release\
-          Copy-Item ${{ matrix.binary_name }} ${{ matrix.output_name }}
 
       - name: Create or Update Release and Upload Binary
         uses: softprops/action-gh-release@v3
         with:
           files: |
             target/${{ matrix.target }}/release/${{ matrix.output_name }}
-            target/aarch64-apple-darwin/release/hal-macos-universal
           draft: false
           prerelease: false
         env:
